@@ -1,3 +1,5 @@
+import datetime
+
 import boto3
 from leaguepedia_parser.site.leaguepedia import leaguepedia
 from setuptools.namespaces import flatten
@@ -25,7 +27,7 @@ def load_leagues_and_return_leages() -> [str]:
 
 
 # https://lol.fandom.com/wiki/Special:CargoTables/Tournaments
-def load_tourneys_and_return_overview_pages(leagues=None) -> [str]:
+def load_tourneys_and_return_overview_pages(leagues=None) -> []:
     if leagues is None:
         leagues = load_leagues_and_return_leages()
     size = len(leagues)
@@ -33,21 +35,23 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> [str]:
         print(f'({i}/{size}) Loading Tournaments for {league}')
         res = leaguepedia.query(
             tables='Tournaments',
-            fields='League, Name, OverviewPage, DateStart, IsQualifier, IsPlayoffs, IsOfficial',
+            fields='League, Name, OverviewPage, DateStart, IsQualifier, IsPlayoffs, IsOfficial, Year',
             where=f"League='{league}'"
         )
-
         for tourney in res:
             tournaments_table.put_item(Item=tourney)
-        yield [tourney['OverviewPage'] for tourney in res]
+        yield [tourney for tourney in res]
 
 
 # https://lol.fandom.com/wiki/Special:CargoTables/ScoreboardGames
-def load_games(overview_pages: [str] = None):
+def load_games(overview_pages=None):
     if overview_pages is None:
-        overview_pages = list(flatten(load_tourneys_and_return_overview_pages()))
+        year = str(datetime.datetime.now().year)
+        overview_pages = list(filter(lambda x: x['Year'] == year, flatten(load_tourneys_and_return_overview_pages())))
+
     size = len(overview_pages)
     for i, overview_page in enumerate(overview_pages):
+        overview_page = overview_page['OverviewPage']
         print(f'({i}/{size}) Loading games for {overview_page}')
         res = leaguepedia.query(
             tables='ScoreboardGames',
