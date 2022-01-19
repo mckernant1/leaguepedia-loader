@@ -40,17 +40,16 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
         )
         for tourney in res:
             tournaments_table.put_item(Item=tourney)
-        yield [tourney for tourney in res]
+            yield tourney
 
 
 # https://lol.fandom.com/wiki/Special:CargoTables/ScoreboardGames
-def load_games(overview_pages=None):
-    if overview_pages is None:
-        year = str(datetime.datetime.now().year)
-        overview_pages = list(filter(lambda x: x['Year'] == year, flatten(load_tourneys_and_return_overview_pages())))
+def load_games(tourneys=None, year=str(datetime.datetime.now().year)):
+    if tourneys is None:
+        tourneys = list(filter(lambda x: x['Year'] == year, load_tourneys_and_return_overview_pages()))
 
-    size = len(overview_pages)
-    for i, overview_page in enumerate(overview_pages):
+    size = len(tourneys)
+    for i, overview_page in enumerate(tourneys):
         overview_page = overview_page['OverviewPage']
         print(f'({i}/{size}) Loading games for {overview_page}')
         res = leaguepedia.query(
