@@ -22,6 +22,7 @@ def load_leagues_and_return_leages() -> [str]:
     )
     for league in res:
         league['League_Short'] = league.pop('League Short')
+        league['IsOfficial'] = True if league.pop('IsOfficial').lower() == 'yes' else False
         leagues_table.put_item(Item=league)
     return [league['League'] for league in res]
 
