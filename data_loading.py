@@ -2,7 +2,6 @@ import datetime
 
 import boto3
 from leaguepedia_parser.site.leaguepedia import leaguepedia
-from setuptools.namespaces import flatten
 
 ddb = boto3.resource('dynamodb')
 
@@ -22,7 +21,8 @@ def load_leagues_and_return_leages() -> [str]:
     )
     for league in res:
         league['League_Short'] = league.pop('League Short')
-        league['IsOfficial'] = True if league.pop('IsOfficial').lower() == 'yes' else False
+        league['League_Short'] = league.pop('League_Short').replace(" ", "_")
+        league['IsOfficial'] = league.pop('IsOfficial').lower() == 'yes'
         leagues_table.put_item(Item=league)
     return [league['League'] for league in res]
 
@@ -32,6 +32,7 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
     if leagues is None:
         leagues = load_leagues_and_return_leages()
     size = len(leagues)
+    tourneys = []
     for i, league in enumerate(leagues):
         print(f'({i}/{size}) Loading Tournaments for {league}')
         res = leaguepedia.query(
@@ -40,8 +41,11 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
             where=f"League='{league}'"
         )
         for tourney in res:
+            tourney['League'] = tourney.pop('League').replace(" ", "_")
+            tourney['Name'] = tourney.pop('Name').replace(" ", "_")
             tournaments_table.put_item(Item=tourney)
-            yield tourney
+            tourneys.append(tourney)
+    return tourneys
 
 
 # https://lol.fandom.com/wiki/Special:CargoTables/ScoreboardGames
@@ -61,6 +65,9 @@ def load_games(tourneys=None, year=str(datetime.datetime.now().year)):
             order_by='DateTime_UTC'
         )
         for game in res:
+            game['Tournament'] = game.pop('Tournament').replace(" ", "_")
+            game['GameId'] = game.pop('GameId').replace(" ", "_")
+            game['MatchId'] = game.pop('MatchId').replace(" ", "_")
             games_table.put_item(Item=game)
 
 
@@ -73,6 +80,7 @@ def load_players():
     size = len(res)
     for i, player in enumerate(res):
         print(f'({i}/{size}) Loading player {player["ID"]}')
+        player['ID'] = player.pop('ID').replace(" ", "_")
         player_table.put_item(Item=player)
 
 
