@@ -83,7 +83,7 @@ def load_matches(tourneys=None, year=str(datetime.datetime.now().year)):
         res = leaguepedia.query(
             tables='MatchSchedule=MS,Tournaments=T',
             join_on="MS.OverviewPage=T.OverviewPage",
-            fields='MS.MatchId, MS.OverviewPage, T.Name, MS.Team1, MS.Team2, MS.Patch, MS.DateTime_UTC',
+            fields='MS.MatchId, MS.OverviewPage, T.Name, MS.Team1, MS.Team2, MS.Patch, MS.DateTime_UTC, MS.Winner, MS.BestOf',
             where=f"T.Name='{name}'",
             order_by='DateTime_UTC'
         )
@@ -97,6 +97,8 @@ def transform_ddb_match(match):
         'tournamentId': match['Name'].replace(' ', '_'),
         'blueTeamId': get_team_code_from_name(match['Team1']),
         'redTeamId': get_team_code_from_name(match['Team2']),
+        'winner': match['Winner'],
+        'bestOf': match['BestOf'],
         'startTime': Decimal(str(datetime.datetime.strptime(match['DateTime UTC'], '%Y-%m-%d %H:%M:%S').timestamp() * 1000)),
         'patch': match['Patch']
     }
