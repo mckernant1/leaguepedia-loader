@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from data_loading import load_players, \
     load_teams, \
     load_leagues_and_return_leages, \
-    load_games, \
+    load_matches, \
     load_tourneys_and_return_overview_pages
 
 
@@ -17,8 +17,8 @@ def get_arg_parser() -> ArgumentParser:
     tourneys = subparsers.add_parser('tourneys')
     tourneys.set_defaults(func=load_tourneys_and_return_overview_pages)
 
-    games = subparsers.add_parser('games')
-    games.set_defaults(func=load_games)
+    games = subparsers.add_parser('matches')
+    games.set_defaults(func=load_matches)
 
     players = subparsers.add_parser('players')
     players.set_defaults(func=load_players)
