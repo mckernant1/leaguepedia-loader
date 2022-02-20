@@ -143,7 +143,7 @@ def load_teams():
 
 def transform_ddb_team(team):
     return {
-        'code': team['Short'],
+        'teamId': team['Short'],
         'name': team['Name'],
         'location': team['Location'],
         'region': team['Region'],
