@@ -99,7 +99,8 @@ def transform_ddb_match(match):
         'redTeamId': get_team_code_from_name(match['Team2']),
         'winner': match['Winner'],
         'bestOf': match['BestOf'],
-        'startTime': Decimal(str(datetime.datetime.strptime(match['DateTime UTC'], '%Y-%m-%d %H:%M:%S').timestamp() * 1000)),
+        'startTime': Decimal(
+            str(datetime.datetime.strptime(match['DateTime UTC'], '%Y-%m-%d %H:%M:%S').timestamp() * 1000)),
         'patch': match['Patch']
     }
 
@@ -150,14 +151,22 @@ def transform_ddb_team(team):
     }
 
 
+team_code_dict = {}
+
+
 def get_team_code_from_name(team_name):
-    res = leaguepedia.query(
-        tables='Teams',
-        fields='Short',
-        where=f"Name='{team_name}'"
-    )
+    if team_code_dict == {}:
+        print('Loading Team Codes into Cache...')
+        res = leaguepedia.query(
+            tables='Teams',
+            fields='Name, Short',
+        )
+        for team in res:
+            team_code_dict[team['Name']] = team
+        print(f'Added {len(res)} team codes to the cache')
 
     try:
-        return res[0]['Short']
-    except IndexError:
+        return team_code_dict[team_name]['Short']
+    except KeyError:
+        print(f'Could not find short for {team_name}')
         return team_name
