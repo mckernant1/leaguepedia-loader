@@ -97,12 +97,21 @@ def transform_ddb_match(match):
         'tournamentId': match['Name'].replace(' ', '_'),
         'blueTeamId': get_team_code_from_name(match['Team1']),
         'redTeamId': get_team_code_from_name(match['Team2']),
-        'winner': match['Winner'],
+        'winner': get_winner(match),
         'bestOf': match['BestOf'],
         'startTime': Decimal(
             str(datetime.datetime.strptime(match['DateTime UTC'], '%Y-%m-%d %H:%M:%S').timestamp() * 1000)),
         'patch': match['Patch']
     }
+
+
+def get_winner(match):
+    if match['Winner'] == '1':
+        return get_team_code_from_name(match['Team1'])
+    elif match['Winner'] == '2':
+        return get_team_code_from_name(match['Team2'])
+    else:
+        return None
 
 
 # https://lol.fandom.com/wiki/Special:CargoTables/Players
