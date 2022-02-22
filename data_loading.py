@@ -65,9 +65,9 @@ def transform_ddb_tourney(tourney):
         'leagueId': tourney['League Short'].replace(' ', '_'),
         'tournamentId': tourney['Name'].replace(' ', '_'),
         'startDate': tourney['DateStart'],
-        'isOfficial': tourney['IsOfficial'],
-        'isPlayoffs': tourney['IsPlayoffs'],
-        'isQualifier': tourney['IsQualifier']
+        'isOfficial': tourney['IsOfficial'] == '1',
+        'isPlayoffs': tourney['IsPlayoffs'] == '1',
+        'isQualifier': tourney['IsQualifier'] == '1'
     }
 
 
@@ -125,7 +125,7 @@ def transform_ddb_player(player):
         'teamId': get_team_code_from_name(player['Team']),
         'residency': player['Residency'],
         'role': player['Role'],
-        'isSubstitute': player['IsSubstitute']
+        'isSubstitute': player['IsSubstitute'] == '1'
     }
 
 
@@ -147,7 +147,7 @@ def transform_ddb_team(team):
         'name': team['Name'],
         'location': team['Location'],
         'region': team['Region'],
-        'isDisbanded': team['IsDisbanded']
+        'isDisbanded': team['IsDisbanded'] == '1'
     }
 
 
