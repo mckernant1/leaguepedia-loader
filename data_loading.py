@@ -142,7 +142,8 @@ def transform_ddb_player(player):
 def load_teams():
     res = leaguepedia.query(
         tables='Teams',
-        fields='Name, Short, Location, Region, IsDisbanded'
+        fields='Name, Short, Location, Region, IsDisbanded',
+        where='IsDisbanded=0'
     )
     size = len(res)
     for i, team in enumerate(res):
