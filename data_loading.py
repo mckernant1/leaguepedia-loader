@@ -198,24 +198,25 @@ def get_team_code_from_name(team_name):
         for team in res:
             team_code_dict[team['Name']] = team
         print(f'Added {len(res)} team codes to the cache')
-    print(team_name)
     try:
         if 'Rogue (European Team)' == team_name:
             return 'RGE'
-        if 'Evil Geniuses.NA' == team_name:
+        elif 'Evil Geniuses.NA' == team_name:
             return 'EG'
-        if 'PEACE (Oceanic Team)' == team_name:
+        elif 'PEACE (Oceanic Team)' == team_name:
             return 'PCE'
-        if 'RED Kalunga' == team_name:
+        elif 'RED Kalunga' == team_name:
             return 'RED'
-        if 'Team Infernal Drake' == team_name:
+        elif 'Team Infernal Drake' == team_name:
             return 'TID'
-        if 'DAMWON Gaming' == team_name:
+        elif 'DAMWON Gaming' == team_name:
             return 'DK'
-        if 'Istanbul Wildcats' == team_name:
+        elif 'Istanbul Wildcats' == team_name:
             return 'IW'
-
-        return team_code_dict[team_name]['Short']
+        elif 'Afreeca Freecs' == team_name:
+            return 'KDF'
+        else:
+            return team_code_dict[team_name]['Short']
     except KeyError:
         print(f'Could not find short for {team_name}')
         return team_name
