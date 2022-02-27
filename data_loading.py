@@ -152,8 +152,14 @@ def load_teams():
 
 
 def transform_ddb_team(team):
+
+    team_id = team['Short']
+
+    if team_id == 'MAD' and team['Name'] == 'Mad Revolution Gaming':
+        team_id = 'MAD_LAT'
+
     return {
-        'teamId': team['Short'],
+        'teamId': team_id,
         'name': team['Name'],
         'location': team['Location'],
         'region': team['Region'],
