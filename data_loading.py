@@ -215,6 +215,8 @@ def get_team_code_from_name(team_name):
             return 'IW'
         elif 'Afreeca Freecs' == team_name:
             return 'KDF'
+        elif 'eStar (Chinese Team)' == team_name:
+            return 'UP'
         else:
             return team_code_dict[team_name]['Short']
     except KeyError:
