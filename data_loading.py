@@ -167,6 +167,15 @@ def transform_ddb_team(team):
     if team_id == 'MAD' and team['Name'] == 'Mad Revolution Gaming':
         team_id = 'MAD_LAT'
 
+    if team_id == 'INF' and team['Name'] == 'Team Infernal Drake':
+        team_id = 'TID'
+
+    if team_id == 'SN' and team['Name'] == 'Supernova':
+        team_id = 'SNV'
+
+    if team_id == 'IW' and team['Name'] == 'İstanbul Wildcats':
+        team['Name'] = 'Istanbul Wildcats'
+
     return {
         'teamId': team_id,
         'name': team['Name'],
@@ -189,12 +198,23 @@ def get_team_code_from_name(team_name):
         for team in res:
             team_code_dict[team['Name']] = team
         print(f'Added {len(res)} team codes to the cache')
-
+    print(team_name)
     try:
         if 'Rogue (European Team)' == team_name:
             return 'RGE'
         if 'Evil Geniuses.NA' == team_name:
             return 'EG'
+        if 'PEACE (Oceanic Team)' == team_name:
+            return 'PCE'
+        if 'RED Kalunga' == team_name:
+            return 'RED'
+        if 'Team Infernal Drake' == team_name:
+            return 'TID'
+        if 'DAMWON Gaming' == team_name:
+            return 'DK'
+        if 'Istanbul Wildcats' == team_name:
+            return 'IW'
+
         return team_code_dict[team_name]['Short']
     except KeyError:
         print(f'Could not find short for {team_name}')
