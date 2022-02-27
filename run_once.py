@@ -7,7 +7,7 @@ if __name__ == '__main__':
         tables='MatchSchedule=MS,Tournaments=T',
         join_on="MS.OverviewPage=T.OverviewPage",
         fields='MS.MatchId, MS.OverviewPage, T.Name, MS.Team1, MS.Team2, MS.Patch, MS.DateTime_UTC, MS.Winner, MS.BestOf',
-        where=f"T.Name='LLA 2022 Opening'",
+        where=f"T.Name='PRM 1st Division 2022 Spring'",
         order_by='DateTime_UTC'
     )
 

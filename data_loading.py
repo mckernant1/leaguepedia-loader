@@ -139,7 +139,7 @@ def transform_ddb_player(player):
     return {
         'id': player['ID'],
         'country': player['Country'],
-        'age': player['Age'],
+        'age': int(player['Age'] if player['Age'] else -1),
         'teamId': get_team_code_from_name(player['Team']),
         'residency': player['Residency'],
         'role': player['Role'],
