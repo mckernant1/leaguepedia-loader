@@ -74,19 +74,22 @@ def transform_ddb_tourney(tourney):
 # https://lol.fandom.com/wiki/Special:CargoTables/MatchSchedule
 def load_matches(tourneys=None, year=str(datetime.datetime.now().year)):
     if tourneys is None:
-        tourneys = list(filter(lambda x: x['Year'] == year, load_tourneys_and_return_overview_pages()))
+        tourneys = list(filter(lambda x: x['Year'] > '2017', load_tourneys_and_return_overview_pages()))
 
     size = len(tourneys)
     for i, overview_page in enumerate(tourneys):
         name = overview_page['Name']
         print(f'({i}/{size}) Loading games for {name}')
-        res = leaguepedia.query(
-            tables='MatchSchedule=MS,Tournaments=T',
-            join_on="MS.OverviewPage=T.OverviewPage",
-            fields='MS.MatchId, MS.OverviewPage, T.Name, MS.Team1, MS.Team2, MS.Patch, MS.DateTime_UTC, MS.Winner, MS.BestOf',
-            where=f"T.Name='{name}'",
-            order_by='DateTime_UTC'
-        )
+        try:
+            res = leaguepedia.query(
+                tables='MatchSchedule=MS,Tournaments=T',
+                join_on="MS.OverviewPage=T.OverviewPage",
+                fields='MS.MatchId, MS.OverviewPage, T.Name, MS.Team1, MS.Team2, MS.Patch, MS.DateTime_UTC, MS.Winner, MS.BestOf',
+                where=f"T.Name='{name}'",
+                order_by='DateTime_UTC'
+            )
+        except Exception:
+            continue
         for match in res:
             matches_table.put_item(Item=transform_ddb_match(match))
 
@@ -99,10 +102,16 @@ def transform_ddb_match(match):
         'redTeamId': get_team_code_from_name(match['Team2']),
         'winner': get_winner(match),
         'bestOf': match['BestOf'],
-        'startTime': Decimal(
-            str(datetime.datetime.strptime(match['DateTime UTC'], '%Y-%m-%d %H:%M:%S').timestamp() * 1000)),
+        'startTime': transform_datetime_utc(match['DateTime UTC']),
         'patch': match['Patch']
     }
+
+
+def transform_datetime_utc(date_time):
+    try:
+        return Decimal(str(datetime.datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S').timestamp() * 1000))
+    except ValueError:
+        return str(-1)
 
 
 def get_winner(match):
@@ -182,6 +191,10 @@ def get_team_code_from_name(team_name):
         print(f'Added {len(res)} team codes to the cache')
 
     try:
+        if 'Rogue (European Team)' == team_name:
+            return 'RGE'
+        if 'Evil Geniuses.NA' == team_name:
+            return 'EG'
         return team_code_dict[team_name]['Short']
     except KeyError:
         print(f'Could not find short for {team_name}')
