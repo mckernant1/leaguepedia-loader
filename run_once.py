@@ -7,7 +7,7 @@ if __name__ == '__main__':
         tables='MatchSchedule=MS,Tournaments=T',
         join_on="MS.OverviewPage=T.OverviewPage",
         fields='MS.MatchId, MS.OverviewPage, T.Name, MS.Team1, MS.Team2, MS.Patch, MS.DateTime_UTC, MS.Winner, MS.BestOf',
-        where=f"T.Name='CBLOL Academy 2021 Split 1'",
+        where=f"T.Name='LLA 2022 Opening'",
         order_by='DateTime_UTC'
     )
 

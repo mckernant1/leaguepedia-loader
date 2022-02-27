@@ -225,6 +225,8 @@ def get_team_code_from_name(team_name):
             return 'UP'
         elif 'Vorax Academy' == team_name:
             return 'LBR.A'
+        elif 'Mousesports' == team_name:
+            return 'MOUZ'
         else:
             return team_code_dict[team_name]['Short']
     except KeyError:
