@@ -179,6 +179,9 @@ def transform_ddb_team(team):
     if team_id == 'RA' and team['Name'] == 'Redemption Arc':
         team_id = 'RAC'
 
+    if team_id == 'V5' and team['Name'] == 'Vortex Five':
+        team_id = 'VF'
+
     return {
         'teamId': team_id,
         'name': team['Name'],
