@@ -54,10 +54,22 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
             where=f"L.League='{league}'"
         )
         res = filter(lambda x: x['Name'], res)
+        res = filter(filter_only_recent_tourneys, res)
+
         for tourney in res:
             tournaments_table.put_item(Item=transform_ddb_tourney(tourney))
             tourneys.append(tourney)
     return tourneys
+
+
+# Filter out tourneys not from this year
+def filter_only_recent_tourneys(tourney):
+    try:
+        date = datetime.datetime.strptime(tourney['DateStart'], '%Y-%m-%d')
+    except ValueError:
+        return False
+
+    return date.year == datetime.datetime.now().year
 
 
 def transform_ddb_tourney(tourney):
@@ -72,9 +84,9 @@ def transform_ddb_tourney(tourney):
 
 
 # https://lol.fandom.com/wiki/Special:CargoTables/MatchSchedule
-def load_matches(tourneys=None, year=str(datetime.datetime.now().year)):
+def load_matches(tourneys=None):
     if tourneys is None:
-        tourneys = list(filter(lambda x: x['Year'] > '2017', load_tourneys_and_return_overview_pages()))
+        tourneys = load_tourneys_and_return_overview_pages()
 
     size = len(tourneys)
     for i, overview_page in enumerate(tourneys):
@@ -90,8 +102,23 @@ def load_matches(tourneys=None, year=str(datetime.datetime.now().year)):
             )
         except Exception:
             continue
+
+        res = list(filter(filter_only_recent_matches, res))
+        print(f'writing {len(res)} matches')
         for match in res:
             matches_table.put_item(Item=transform_ddb_match(match))
+
+
+# Adding this filter to reduce the cost of DDB Writes.
+def filter_only_recent_matches(match):
+    try:
+        date = datetime.datetime.strptime(match['DateTime UTC'], '%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        return False
+    now = datetime.datetime.now()
+    # If the match is older than 2 hours we don't need to update it
+    # If the match is farther than 2 weeks in the future don't worry about it
+    return now - datetime.timedelta(hours=3) < date < now + datetime.timedelta(weeks=2)
 
 
 def transform_ddb_match(match):
