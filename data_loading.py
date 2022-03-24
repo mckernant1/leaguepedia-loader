@@ -50,7 +50,7 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
         res = leaguepedia.query(
             tables='Tournaments=T,Leagues=L',
             join_on="L.League=T.League",
-            fields='T.Name, T.OverviewPage, T.DateStart, T.IsQualifier, T.IsPlayoffs, T.IsOfficial, T.Year, L.League_Short',
+            fields='T.Name, T.OverviewPage, T.DateStart, T.IsQualifier, T.IsPlayoffs, T.IsOfficial, T.Year, L.League_Short, T.Date',
             where=f"L.League='{league}'"
         )
         res = filter(lambda x: x['Name'], res)
@@ -77,6 +77,7 @@ def transform_ddb_tourney(tourney):
         'leagueId': tourney['League Short'].replace(' ', '_'),
         'tournamentId': tourney['Name'].replace(' ', '_'),
         'startDate': tourney['DateStart'],
+        'endDate': tourney['Date'],
         'isOfficial': tourney['IsOfficial'] == '1',
         'isPlayoffs': tourney['IsPlayoffs'] == '1',
         'isQualifier': tourney['IsQualifier'] == '1'
