@@ -117,9 +117,9 @@ def filter_only_recent_matches(match):
     except ValueError:
         return False
     now = datetime.datetime.now()
-    # If the match is older than 2 hours we don't need to update it
+    # If the match is older than 12 hours we don't need to update it
     # If the match is farther than 2 weeks in the future don't worry about it
-    return now - datetime.timedelta(hours=24) < date < now + datetime.timedelta(weeks=2)
+    return now - datetime.timedelta(hours=12) < date < now + datetime.timedelta(weeks=2)
 
 
 def transform_ddb_match(match):
