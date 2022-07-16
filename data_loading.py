@@ -66,7 +66,7 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
 def filter_only_recent_tourneys(tourney):
     try:
         date = datetime.datetime.strptime(tourney['DateStart'], '%Y-%m-%d')
-    except ValueError:
+    except (TypeError, ValueError):
         return False
 
     return date.year == datetime.datetime.now().year
