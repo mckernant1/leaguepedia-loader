@@ -114,7 +114,7 @@ def load_matches(tourneys=None):
 def filter_only_recent_matches(match):
     try:
         date = datetime.datetime.strptime(match['DateTime UTC'], '%Y-%m-%d %H:%M:%S')
-    except ValueError:
+    except (TypeError, ValueError):
         return False
     now = datetime.datetime.now()
     # If the match is older than 12 hours we don't need to update it
@@ -138,7 +138,7 @@ def transform_ddb_match(match):
 def transform_datetime_utc(date_time):
     try:
         return Decimal(str(datetime.datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S').timestamp() * 1000))
-    except ValueError:
+    except (TypeError, ValueError):
         return str(-1)
 
 
