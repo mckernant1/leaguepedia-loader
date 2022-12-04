@@ -1,9 +1,13 @@
 import datetime
-from decimal import Decimal
-from pprint import pprint
 
 import boto3
 from leaguepedia_parser.site.leaguepedia import leaguepedia
+
+from models.league import League
+from models.match import Match
+from models.player import Player
+from models.team import Team
+from models.tournament import Tournament
 
 ddb = boto3.resource('dynamodb')
 
@@ -25,18 +29,14 @@ def load_leagues_and_return_leages() -> [str]:
         fields='League, League_Short, Region, Level, IsOfficial'
     )
     for league in res:
-        leagues_table.put_item(Item=transform_ddb_league(league))
+        ddb_item = League(league)
+        existing = leagues_table.get_item(Key=ddb_item.key()).get('Item', None)
+        if existing != ddb_item.ddb_format():
+            print(f'Putting updated league new: {ddb_item.ddb_format()}, old: {existing}')
+            leagues_table.put_item(Item=ddb_item.ddb_format())
+        else:
+            print(f'Skipping put for {ddb_item.leagueId}')
     return [league['League'] for league in res]
-
-
-def transform_ddb_league(league):
-    return {
-        'leagueId': league['League Short'].replace(' ', '_'),
-        'region': league['Region'],
-        'isOfficial': league['IsOfficial'].lower() == 'yes',
-        'level': league['Level'],
-        'leagueName': league['League']
-    }
 
 
 # https://lol.fandom.com/wiki/Special:CargoTables/Tournaments
@@ -57,7 +57,13 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
         res = filter(filter_only_recent_tourneys, res)
 
         for tourney in res:
-            tournaments_table.put_item(Item=transform_ddb_tourney(tourney))
+            ddb_tourney = Tournament(tourney)
+            existing = tournaments_table.get_item(Key=ddb_tourney.key()).get('Item', None)
+            if existing != ddb_tourney.ddb_format():
+                print(f'Putting new tournament {ddb_tourney}')
+                tournaments_table.put_item(Item=ddb_tourney)
+            else:
+                print(f'Skipping put for {ddb_tourney.leagueId}')
             tourneys.append(tourney)
     return tourneys
 
@@ -70,18 +76,6 @@ def filter_only_recent_tourneys(tourney):
         return False
 
     return date.year == datetime.datetime.now().year
-
-
-def transform_ddb_tourney(tourney):
-    return {
-        'leagueId': tourney['League Short'].replace(' ', '_'),
-        'tournamentId': tourney['Name'].replace(' ', '_'),
-        'startDate': tourney['DateStart'],
-        'endDate': tourney['Date'],
-        'isOfficial': tourney['IsOfficial'] == '1',
-        'isPlayoffs': tourney['IsPlayoffs'] == '1',
-        'isQualifier': tourney['IsQualifier'] == '1'
-    }
 
 
 # https://lol.fandom.com/wiki/Special:CargoTables/MatchSchedule
@@ -107,7 +101,13 @@ def load_matches(tourneys=None):
         res = list(filter(filter_only_recent_matches, res))
         print(f'writing {len(res)} matches')
         for match in res:
-            matches_table.put_item(Item=transform_ddb_match(match))
+            ddb_item = Match(match)
+            existing = matches_table.get_item(Key=ddb_item.key()).get('Item', None)
+            if existing != ddb_item.ddb_format():
+                print(f'Putting new match {ddb_item.ddb_format()}')
+                matches_table.put_item(Item=ddb_item)
+            else:
+                print(f'Skipping upload for {ddb_item.matchId}')
 
 
 # Adding this filter to reduce the cost of DDB Writes.
@@ -122,35 +122,6 @@ def filter_only_recent_matches(match):
     return now - datetime.timedelta(hours=12) < date < now + datetime.timedelta(weeks=2)
 
 
-def transform_ddb_match(match):
-    return {
-        'matchId': match['MatchId'].replace(" ", "_"),
-        'tournamentId': match['Name'].replace(' ', '_'),
-        'blueTeamId': get_team_code_from_name(match['Team1']),
-        'redTeamId': get_team_code_from_name(match['Team2']),
-        'winner': get_winner(match),
-        'bestOf': match['BestOf'],
-        'startTime': transform_datetime_utc(match['DateTime UTC']),
-        'patch': match['Patch']
-    }
-
-
-def transform_datetime_utc(date_time):
-    try:
-        return Decimal(str(datetime.datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S').timestamp() * 1000))
-    except (TypeError, ValueError):
-        return str(-1)
-
-
-def get_winner(match):
-    if match['Winner'] == '1':
-        return get_team_code_from_name(match['Team1'])
-    elif match['Winner'] == '2':
-        return get_team_code_from_name(match['Team2'])
-    else:
-        return None
-
-
 # https://lol.fandom.com/wiki/Special:CargoTables/Players
 def load_players():
     res = leaguepedia.query(
@@ -160,19 +131,13 @@ def load_players():
     size = len(res)
     for i, player in enumerate(res):
         print(f'({i}/{size}) Loading player {player["ID"]}')
-        player_table.put_item(Item=transform_ddb_player(player))
-
-
-def transform_ddb_player(player):
-    return {
-        'id': player['ID'],
-        'country': player['Country'],
-        'age': int(player['Age'] if player['Age'] else -1),
-        'teamId': get_team_code_from_name(player['Team']),
-        'residency': player['Residency'],
-        'role': player['Role'],
-        'isSubstitute': player['IsSubstitute'] == '1'
-    }
+        ddb_item = Player(player)
+        existing = player_table.get_item(Key=ddb_item.key()).get('Item', None)
+        if existing != ddb_item.ddb_format():
+            print(f'Putting new player: {ddb_item.ddb_format()}, existing: {existing}')
+            player_table.put_item(Item=ddb_item.ddb_format())
+        else:
+            print(f'Skipping player {ddb_item.id}')
 
 
 # https://lol.fandom.com/wiki/Special:CargoTables/Teams
@@ -185,78 +150,10 @@ def load_teams():
     size = len(res)
     for i, team in enumerate(res):
         print(f'({i}/{size}) Loading team {team["Name"]}')
-        team_table.put_item(Item=transform_ddb_team(team))
-
-
-def transform_ddb_team(team):
-
-    team_id = team['Short']
-
-    if team_id == 'MAD' and team['Name'] == 'Mad Revolution Gaming':
-        team_id = 'MAD_LAT'
-
-    if team_id == 'INF' and team['Name'] == 'Team Infernal Drake':
-        team_id = 'TID'
-
-    if team_id == 'SN' and team['Name'] == 'Supernova':
-        team_id = 'SNV'
-
-    if team_id == 'IW' and team['Name'] == 'İstanbul Wildcats':
-        team['Name'] = 'Istanbul Wildcats'
-
-    if team_id == 'RA' and team['Name'] == 'Redemption Arc':
-        team_id = 'RAC'
-
-    if team_id == 'V5' and team['Name'] == 'Vortex Five':
-        team_id = 'VF'
-
-    return {
-        'teamId': team_id,
-        'name': team['Name'],
-        'location': team['Location'],
-        'region': team['Region'],
-        'isDisbanded': team['IsDisbanded'] == '1'
-    }
-
-
-team_code_dict = {}
-
-
-def get_team_code_from_name(team_name):
-    if team_code_dict == {}:
-        print('Loading Team Codes into Cache...')
-        res = leaguepedia.query(
-            tables='Teams',
-            fields='Name, Short',
-        )
-        for team in res:
-            team_code_dict[team['Name']] = team
-        print(f'Added {len(res)} team codes to the cache')
-    try:
-        if 'Rogue (European Team)' == team_name:
-            return 'RGE'
-        elif 'Evil Geniuses.NA' == team_name:
-            return 'EG'
-        elif 'PEACE (Oceanic Team)' == team_name:
-            return 'PCE'
-        elif 'RED Kalunga' == team_name:
-            return 'RED'
-        elif 'Team Infernal Drake' == team_name:
-            return 'TID'
-        elif 'DAMWON Gaming' == team_name:
-            return 'DK'
-        elif 'Istanbul Wildcats' == team_name:
-            return 'IW'
-        elif 'Afreeca Freecs' == team_name:
-            return 'KDF'
-        elif 'eStar (Chinese Team)' == team_name:
-            return 'UP'
-        elif 'Vorax Academy' == team_name:
-            return 'LBR.A'
-        elif 'Mousesports' == team_name:
-            return 'MOUZ'
+        ddb_item = Team(team)
+        existing = team_table.get_item(Key=ddb_item.key()).get('Item', None)
+        if existing != ddb_item.ddb_format():
+            print(f'Putting team new: {ddb_item.ddb_format()}, old: {existing}')
+            team_table.put_item(Item=ddb_item.ddb_format())
         else:
-            return team_code_dict[team_name]['Short']
-    except KeyError:
-        print(f'Could not find short for {team_name}')
-        return team_name
+            print(f'Skipping team {ddb_item.teamId}')

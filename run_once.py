@@ -1,18 +1,72 @@
-from leaguepedia_parser.site.leaguepedia import leaguepedia
+from pprint import pprint
 
-from data_loading import load_matches, get_team_code_from_name, team_code_dict, transform_ddb_match, matches_table
+from leaguepedia_parser.site.leaguepedia import LeaguepediaSite
 
 if __name__ == '__main__':
-    res = leaguepedia.query(
-        tables='MatchSchedule=MS,Tournaments=T',
-        join_on="MS.OverviewPage=T.OverviewPage",
-        fields='MS.MatchId, MS.OverviewPage, T.Name, MS.Team1, MS.Team2, MS.Patch, MS.DateTime_UTC, MS.Winner, MS.BestOf',
-        where=f"T.Name='PRM 1st Division 2022 Spring'",
-        order_by='DateTime_UTC'
+    lp = LeaguepediaSite()
+
+    res1 = lp.query(
+        tables="ScoreboardGames=SG",
+        fields="SG.Tournament, SG.DateTime_UTC, SG.Team1, SG.Team2"
     )
 
-    for match in res:
-        matches_table.put_item(Item=transform_ddb_match(match))
+    print(res1)
+
+    res = lp.query(
+        tables='ScoreboardGames',
+        fields='GameId, MatchId, Team1, Team2, WinTeam, DateTime_UTC, Team1Score, Team2Score, Gamelength, Team1Bans, Team2Bans, Team1Dragons, Team2Dragons, Team1Barons, Team2Barons, Team1Towers, Team2Towers, Team1Gold, Team2Gold, Team1Kills, Team2Kills, Team1RiftHeralds, Team2RiftHeralds, Team1Inhibitors, Team2Inhibitors',
+        where=f"MatchId='2022 Season World Championship/Play-In Qualification Round 2'",
+    )
+
+    for r in res:
+        pprint(r)
 
 
+def transform_game_details(obj):
+    return {
+        'gameId': obj['GameId'],
+        'matchId': obj['MatchId'],
+        'team1': obj['Team1'],
+        'team2': obj['Team2'],
+        'winner': obj['WinTeam'],
+        'startTime': obj['DateTime_UTC'],
+        'team1Score': obj['Team1Score'],
+        'team2Score': obj['Team2Score'],
+        'gameLength': obj['Gamelength'],
+        'team1Bans': obj['Team1Bans'],
+        'team2Bans': obj['Team2Bans'],
+        'team1DragCount': obj['Team1Dragons'],
+        'team2DragCount': obj['Team2Dragons'],
+        'team1BaronCount': obj['Team1Barons'],
+        'team2BaronCount': obj['Team2Barons'],
+        'team1TowerCount': obj['Team1Towers'],
+        'team2TowerCount': obj['Team2Towers'],
+        'team1Gold': obj['Team1Gold'],
+        'team2Gold': obj['Team2Gold'],
+        'team1Kills': obj['Team1Kills'],
+        'team2Kills': obj['Team2Kills'],
+        'team1HeraldCount': obj['Team1RiftHeralds'],
+        'team2HeraldCount': obj['Team2RiftHeralds'],
+        'team1InhibitorCount': obj['Team1Inhibitors'],
+        'team2InhibitorCount': obj['Team2Inhibitors'],
+    }
 
+
+def transform_player_details(obj):
+    return {
+        'id': obj['Link'],
+        'champion': obj['Champion'],
+        'kills': obj['Kills'],
+        'deaths': obj['Deaths'],
+        'assists': obj['Assists'],
+        'summonerSpells': obj.split(','),
+        'gold': obj['Gold'],
+        'cs': obj['CS'],
+        'damageDelt': obj['DamageToChampions'],
+        'visionScore': obj['VisionScore'],
+        'items': obj['Items'].split(','),
+        'trinket': obj['Trinket'],
+        'role': obj['IngameRole'],
+        'side': obj['Side'],
+        'team': obj['Team']
+    }
