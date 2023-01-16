@@ -22,7 +22,7 @@ team_table = ddb.Table('Teams')
 # Loading Funcs
 
 # https://lol.fandom.com/wiki/Special:CargoTables/Leagues
-def load_leagues_and_return_leages() -> [str]:
+def load_leagues_and_return_leagues() -> [str]:
     print('Loading Leagues')
     res = leaguepedia.query(
         tables='Leagues',
@@ -42,7 +42,7 @@ def load_leagues_and_return_leages() -> [str]:
 # https://lol.fandom.com/wiki/Special:CargoTables/Tournaments
 def load_tourneys_and_return_overview_pages(leagues=None) -> []:
     if leagues is None:
-        leagues = load_leagues_and_return_leages()
+        leagues = load_leagues_and_return_leagues()
     size = len(leagues)
     tourneys = []
     for i, league in enumerate(leagues):
@@ -61,7 +61,7 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
             existing = tournaments_table.get_item(Key=ddb_tourney.key()).get('Item', None)
             if existing != ddb_tourney.ddb_format():
                 print(f'Putting new tournament {ddb_tourney}')
-                tournaments_table.put_item(Item=ddb_tourney)
+                tournaments_table.put_item(Item=ddb_tourney.ddb_format())
             else:
                 print(f'Skipping put for {ddb_tourney.leagueId}')
             tourneys.append(tourney)
@@ -99,13 +99,13 @@ def load_matches(tourneys=None):
             continue
 
         res = list(filter(filter_only_recent_matches, res))
-        print(f'writing {len(res)} matches')
+        print(f'trying to write {len(res)} matches')
         for match in res:
             ddb_item = Match(match)
             existing = matches_table.get_item(Key=ddb_item.key()).get('Item', None)
             if existing != ddb_item.ddb_format():
                 print(f'Putting new match {ddb_item.ddb_format()}')
-                matches_table.put_item(Item=ddb_item)
+                matches_table.put_item(Item=ddb_item.ddb_format())
             else:
                 print(f'Skipping upload for {ddb_item.matchId}')
 
