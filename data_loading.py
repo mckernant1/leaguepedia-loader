@@ -54,7 +54,7 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
             where=f"L.League='{league}'"
         )
         res = filter(lambda x: x['Name'], res)
-        # res = filter(filter_only_recent_tourneys, res)
+        res = filter(filter_only_recent_tourneys, res)
 
         for tourney in res:
             ddb_tourney = Tournament(tourney)
