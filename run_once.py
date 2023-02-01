@@ -6,20 +6,14 @@ if __name__ == '__main__':
     lp = LeaguepediaSite()
 
     res1 = lp.query(
-        tables="ScoreboardGames=SG",
-        fields="SG.Tournament, SG.DateTime_UTC, SG.Team1, SG.Team2"
+        tables="Leagues=L",
+        fields="L.League, L.League_Short",
+        where="L.League_Short='SL'"
     )
 
-    print(res1)
+    for res in res1:
+        pprint(res)
 
-    res = lp.query(
-        tables='ScoreboardGames',
-        fields='GameId, MatchId, Team1, Team2, WinTeam, DateTime_UTC, Team1Score, Team2Score, Gamelength, Team1Bans, Team2Bans, Team1Dragons, Team2Dragons, Team1Barons, Team2Barons, Team1Towers, Team2Towers, Team1Gold, Team2Gold, Team1Kills, Team2Kills, Team1RiftHeralds, Team2RiftHeralds, Team1Inhibitors, Team2Inhibitors',
-        where=f"MatchId='2022 Season World Championship/Play-In Qualification Round 2'",
-    )
-
-    for r in res:
-        pprint(r)
 
 
 def transform_game_details(obj):

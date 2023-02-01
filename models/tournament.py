@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from models import league_map, league_short_unique
+
 
 @dataclass
 class Tournament:
@@ -12,7 +14,10 @@ class Tournament:
     isQualifier: bool
 
     def __init__(self, tourney):
+        leagueName = tourney['League']
         self.leagueId = tourney['League Short'].replace(' ', '_')
+        if leagueName in league_map.keys():
+            self.leagueId = league_short_unique(leagueName)
         self.tournamentId = tourney['Name'].replace(' ', '_')
         self.startDate = tourney['DateStart']
         self.endDate = tourney['Date']

@@ -50,11 +50,11 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
         res = leaguepedia.query(
             tables='Tournaments=T,Leagues=L',
             join_on="L.League=T.League",
-            fields='T.Name, T.OverviewPage, T.DateStart, T.IsQualifier, T.IsPlayoffs, T.IsOfficial, T.Year, L.League_Short, T.Date',
+            fields='T.Name, T.OverviewPage, T.DateStart, T.IsQualifier, T.IsPlayoffs, T.IsOfficial, T.Year, L.League_Short, T.Date, L.League',
             where=f"L.League='{league}'"
         )
         res = filter(lambda x: x['Name'], res)
-        res = filter(filter_only_recent_tourneys, res)
+        # res = filter(filter_only_recent_tourneys, res)
 
         for tourney in res:
             ddb_tourney = Tournament(tourney)
