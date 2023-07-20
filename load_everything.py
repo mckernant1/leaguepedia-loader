@@ -37,3 +37,5 @@ if __name__ == '__main__':
         cmd_parser.print_help()
     else:
         cmd.func()
+
+    print('Done!')

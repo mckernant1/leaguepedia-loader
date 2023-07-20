@@ -27,5 +27,6 @@ class Player:
 
     def key(self):
         return {
+            'teamId': self.teamId,
             'id': self.id
         }
