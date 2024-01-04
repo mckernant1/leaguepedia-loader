@@ -1,4 +1,4 @@
-FROM 653528873951.dkr.ecr.us-west-2.amazonaws.com/python-39-slim-bullseye
+FROM 653528873951.dkr.ecr.us-west-2.amazonaws.com/docker-hub/library/python:3.11-bookworm
 
 COPY . /app
 WORKDIR /app
