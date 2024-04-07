@@ -69,9 +69,7 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
     return tourneys
 
 
-tourneys_to_exclude = {
-    'LFL Division 2': 'LFL2'
-}
+tourneys_to_exclude = {}
 
 
 def remap_tournaments_manual(tourney):
