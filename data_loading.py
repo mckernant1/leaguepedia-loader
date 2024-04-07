@@ -9,7 +9,7 @@ from models.player import Player
 from models.team import Team
 from models.tournament import Tournament
 
-ddb = boto3.resource('dynamodb')
+ddb = boto3.resource('dynamodb', region_name='us-west-2')
 
 leagues_table = ddb.Table('Leagues')
 tournaments_table = ddb.Table('Tournaments')
@@ -55,6 +55,7 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
         )
         res = filter(lambda x: x['Name'], res)
         res = filter(filter_only_recent_tourneys, res)
+        res = map(remap_tournaments_manual, res)
 
         for tourney in res:
             ddb_tourney = Tournament(tourney)
@@ -67,6 +68,20 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
             tourneys.append(tourney)
     return tourneys
 
+
+tourneys_to_exclude = {
+    'LFL Division 2': 'LFL2'
+}
+
+
+def remap_tournaments_manual(tourney):
+    for key, value in tourneys_to_exclude.items():
+        print(f"Testing {tourney['Name']} and {key}")
+        if key in tourney['Name']:
+            print(f"Replacing {tourney['Name']} with {tourney['Name'].replace(key, value)}")
+            tourney['Name'] = tourney["Name"].replace(key, value)
+            break
+    return tourney
 
 # Filter out tourneys not from this year
 def filter_only_recent_tourneys(tourney):
