@@ -1,18 +1,22 @@
+from logging import Logger
+
 from leaguepedia_parser.site.leaguepedia import leaguepedia
 
 team_code_dict = {}
 
+logger = Logger(__name__)
+
 
 def get_team_code_from_name(team_name):
     if team_code_dict == {}:
-        print('Loading Team Codes into Cache...')
+        logger.debug('Loading Team Codes into Cache...')
         res = leaguepedia.query(
             tables='Teams',
             fields='Name, Short',
         )
         for team in res:
             team_code_dict[team['Name']] = team
-        print(f'Added {len(res)} team codes to the cache')
+        logger.debug(f'Added {len(res)} team codes to the cache')
     try:
         if 'Rogue (European Team)' == team_name:
             return 'RGE'
@@ -39,5 +43,5 @@ def get_team_code_from_name(team_name):
         else:
             return team_code_dict[team_name]['Short']
     except KeyError:
-        # print(f'Could not find short for {team_name}')
+        logger.debug(f'Could not find short for {team_name}')
         return team_name

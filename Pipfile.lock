@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "bcff0a0808bd7e483888f5bff2b9463ff95780f2a78b2ebbaedd27d4779e8ce2"
+            "sha256": "9a40a850e04fe5ac30abe42ff3ec351fdbb54f0206a07ff1c340cf1c29374bda"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -179,6 +179,22 @@
             "markers": "python_version >= '3.8' and python_version < '4.0'",
             "version": "==2.0.1"
         },
+        "markdown-it-py": {
+            "hashes": [
+                "sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1",
+                "sha256:e3f60a94fa066dc52ec76661e37c851cb232d92f9886b15cb560aaada2df8feb"
+            ],
+            "markers": "python_version >= '3.8'",
+            "version": "==3.0.0"
+        },
+        "mdurl": {
+            "hashes": [
+                "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+                "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"
+            ],
+            "markers": "python_version >= '3.7'",
+            "version": "==0.1.2"
+        },
         "mwcleric": {
             "hashes": [
                 "sha256:8e7fbbc77e6dea574344992c627730d728f50220344c17f74395b51cd0e0e1f9"
@@ -281,6 +297,14 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==1.10.15"
+        },
+        "pygments": {
+            "hashes": [
+                "sha256:61c16d2a8576dc0649d9f39e089b5f02bcd27fba10d8fb4dcc28173f7a45151f",
+                "sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c"
+            ],
+            "markers": "python_version >= '3.8'",
+            "version": "==2.19.1"
         },
         "python-dateutil": {
             "hashes": [
@@ -426,6 +450,15 @@
             ],
             "markers": "python_version >= '3.4'",
             "version": "==2.0.0"
+        },
+        "rich": {
+            "hashes": [
+                "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098",
+                "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90"
+            ],
+            "index": "pypi",
+            "markers": "python_full_version >= '3.8.0'",
+            "version": "==13.9.4"
         },
         "s3transfer": {
             "hashes": [
