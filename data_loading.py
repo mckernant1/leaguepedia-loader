@@ -1,4 +1,5 @@
 import datetime
+from concurrent.futures.thread import ThreadPoolExecutor
 
 import boto3
 from leaguepedia_parser.site.leaguepedia import leaguepedia
@@ -20,6 +21,7 @@ team_table = ddb.Table('Teams')
 
 
 # Loading Funcs
+ONLY_LOAD_RECENT = False
 
 # https://lol.fandom.com/wiki/Special:CargoTables/Leagues
 def load_leagues_and_return_leagues() -> [str]:
@@ -64,7 +66,7 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
                 print(f'Putting new tournament {ddb_tourney}')
                 tournaments_table.put_item(Item=ddb_tourney.ddb_format())
             else:
-                print(f'Skipping put for {ddb_tourney.leagueId}')
+                print(f'Skipping put for {ddb_tourney.tournamentId}')
             tourneys.append(tourney)
     return tourneys
 
@@ -74,7 +76,7 @@ tourneys_to_exclude = {}
 
 def remap_tournaments_manual(tourney):
     for key, value in tourneys_to_exclude.items():
-        print(f"Testing {tourney['Name']} and {key}")
+        # print(f"Testing {tourney['Name']} and {key}")
         if key in tourney['Name']:
             print(f"Replacing {tourney['Name']} with {tourney['Name'].replace(key, value)}")
             tourney['Name'] = tourney["Name"].replace(key, value)
@@ -83,6 +85,8 @@ def remap_tournaments_manual(tourney):
 
 # Filter out tourneys not from this year
 def filter_only_recent_tourneys(tourney):
+    if not ONLY_LOAD_RECENT:
+        return True
     try:
         date = datetime.datetime.strptime(tourney['DateStart'], '%Y-%m-%d')
     except (TypeError, ValueError):
@@ -91,40 +95,50 @@ def filter_only_recent_tourneys(tourney):
     return date.year == datetime.datetime.now().year
 
 
+def load_matches_thread(i, overview_page, size):
+    name = overview_page['Name']
+    print(f'({i}/{size}) Loading games for {name}')
+    try:
+        res = leaguepedia.query(
+            tables='MatchSchedule=MS,Tournaments=T,ScoreboardGames=SG',
+            join_on="MS.OverviewPage=T.OverviewPage,T.OverviewPage=SG.OverviewPage",
+            fields='MS.MatchId, MS.OverviewPage, T.Name, MS.Team1, MS.Team2, MS.Patch, MS.DateTime_UTC, MS.Winner, MS.BestOf, SG.VOD, MS.VodHighlights',
+            where=f"T.Name='{name}'",
+            order_by='MS.DateTime_UTC'
+        )
+    except Exception:
+        print(f'Hit Error for {name}')
+        return
+
+    res = list(filter(filter_only_recent_matches, res))
+    # print(f'trying to write {len(res)} matches')
+    for match in res:
+        ddb_item = Match(match)
+        existing = matches_table.get_item(Key=ddb_item.key()).get('Item', None)
+        if existing != ddb_item.ddb_format():
+            # print(f'Putting new match {ddb_item.ddb_format()}')
+            matches_table.put_item(Item=ddb_item.ddb_format())
+        # else:
+        #     print(f'Skipping upload for {ddb_item.matchId}')
+
 # https://lol.fandom.com/wiki/Special:CargoTables/MatchSchedule
 def load_matches(tourneys=None):
     if tourneys is None:
         tourneys = load_tourneys_and_return_overview_pages()
 
     size = len(tourneys)
-    for i, overview_page in enumerate(tourneys):
-        name = overview_page['Name']
-        print(f'({i}/{size}) Loading games for {name}')
-        try:
-            res = leaguepedia.query(
-                tables='MatchSchedule=MS,Tournaments=T',
-                join_on="MS.OverviewPage=T.OverviewPage",
-                fields='MS.MatchId, MS.OverviewPage, T.Name, MS.Team1, MS.Team2, MS.Patch, MS.DateTime_UTC, MS.Winner, MS.BestOf',
-                where=f"T.Name='{name}'",
-                order_by='DateTime_UTC'
-            )
-        except Exception:
-            continue
+    tp = ThreadPoolExecutor(max_workers=10)
 
-        res = list(filter(filter_only_recent_matches, res))
-        print(f'trying to write {len(res)} matches')
-        for match in res:
-            ddb_item = Match(match)
-            existing = matches_table.get_item(Key=ddb_item.key()).get('Item', None)
-            if existing != ddb_item.ddb_format():
-                print(f'Putting new match {ddb_item.ddb_format()}')
-                matches_table.put_item(Item=ddb_item.ddb_format())
-            else:
-                print(f'Skipping upload for {ddb_item.matchId}')
+    for i, overview_page in enumerate(tourneys):
+        tp.submit(load_matches_thread, i, overview_page, size)
+
+    tp.shutdown(wait=True)
 
 
 # Adding this filter to reduce the cost of DDB Writes.
 def filter_only_recent_matches(match):
+    if not ONLY_LOAD_RECENT:
+        return True
     try:
         date = datetime.datetime.strptime(match['DateTime UTC'], '%Y-%m-%d %H:%M:%S')
     except (TypeError, ValueError):

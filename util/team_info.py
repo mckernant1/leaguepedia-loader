@@ -39,5 +39,5 @@ def get_team_code_from_name(team_name):
         else:
             return team_code_dict[team_name]['Short']
     except KeyError:
-        print(f'Could not find short for {team_name}')
+        # print(f'Could not find short for {team_name}')
         return team_name

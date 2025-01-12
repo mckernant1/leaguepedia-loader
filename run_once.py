@@ -5,13 +5,15 @@ from leaguepedia_parser.site.leaguepedia import LeaguepediaSite
 if __name__ == '__main__':
     lp = LeaguepediaSite()
 
-    res1 = lp.query(
-        tables="Leagues=L",
-        fields="L.League, L.League_Short",
-        where="L.League_Short='SL'"
+    res2 = lp.query(
+        tables='MatchSchedule=MS,Tournaments=T,ScoreboardGames=SG',
+        join_on="MS.OverviewPage=T.OverviewPage,T.OverviewPage=SG.OverviewPage",
+        fields='MS.MatchId, MS.OverviewPage, T.Name, MS.Team1, MS.Team2, MS.Patch, MS.DateTime_UTC, MS.Winner, MS.BestOf, SG.VOD, MS.VodHighlights',
+        where=f"T.Name='LCK 2023 Spring'",
+        order_by='MS.DateTime_UTC'
     )
 
-    for res in res1:
+    for res in res2:
         pprint(res)
 
 

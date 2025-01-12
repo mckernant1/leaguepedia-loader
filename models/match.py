@@ -14,6 +14,8 @@ class Match:
     bestOf: int
     startTime: str
     patch: str
+    vod: str
+    highlight: str
 
     def __init__(self, match):
         self.matchId = match['MatchId'].replace(" ", "_")
@@ -24,6 +26,8 @@ class Match:
         self.bestOf = match['BestOf']
         self.startTime = transform_datetime_utc(match['DateTime UTC'])
         self.patch = match['Patch']
+        self.vod = match['VOD']
+        self.highlight = match['VodHighlights']
 
     def ddb_format(self):
         return self.__dict__
