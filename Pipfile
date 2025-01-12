@@ -5,11 +5,11 @@ name = "pypi"
 
 [packages]
 leaguepedia-parser = "2.0.2"
-boto3 = "1.34.11"
-botocore = "1.34.11"
 rich = "*"
+boto3 = "*"
+botocore = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.13"
 
 [dev-packages]
