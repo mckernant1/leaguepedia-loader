@@ -1,9 +1,12 @@
 import datetime
 import logging
+import warnings
 from concurrent.futures.thread import ThreadPoolExecutor
 from logging import Logger
 
 import boto3
+from botocore.config import Config
+
 from leaguepedia_parser.site.leaguepedia import leaguepedia
 from rich.logging import RichHandler
 from rich.progress import track, Progress, TaskID
@@ -14,7 +17,11 @@ from models.player import Player
 from models.team import Team
 from models.tournament import Tournament
 
-ddb = boto3.resource('dynamodb', region_name='us-west-2')
+warnings.filterwarnings(action="ignore", message=r"datetime.datetime.utcnow")
+
+ddb = boto3.resource('dynamodb', region_name='us-west-2', config=Config(
+    max_pool_connections=30
+))
 
 leagues_table = ddb.Table('Leagues')
 tournaments_table = ddb.Table('Tournaments')
@@ -60,7 +67,7 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
 
     progress = Progress(transient=True)
     progress.start()
-    overall = progress.add_task('Overall Job', total=len(leagues))
+    overall = progress.add_task('Loading Tournaments', total=len(leagues))
 
     for league in leagues:
         progress.advance(overall)
