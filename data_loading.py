@@ -181,7 +181,7 @@ def filter_only_recent_matches(match):
         return False
     now = datetime.datetime.now()
 
-    # If the match is older than 1 week we don't need to update it. Vods are updated 
+    # If the match is older than 1 week we don't need to update it. Vods/highlights are updated late
     # If the match is farther than 2 weeks in the future don't worry about it
     return now - datetime.timedelta(weeks=1) < date < now + datetime.timedelta(weeks=2)
 
