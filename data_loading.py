@@ -34,7 +34,7 @@ logging.basicConfig(
     level="INFO", datefmt="[%X]", handlers=[RichHandler()]
 )
 
-logger = Logger(__name__)
+logger = logging.getLogger(__name__)
 
 # Remove the recency time filters.
 # This will load all history and will take a long time
@@ -47,14 +47,19 @@ def load_leagues_and_return_leagues() -> [str]:
         tables='Leagues',
         fields='League, League_Short, Region, Level, IsOfficial'
     )
+    updated_leagues = 0
     for league in track(res, description='Loading Leagues'):
         ddb_item = League(league)
         existing = leagues_table.get_item(Key=ddb_item.key()).get('Item', None)
         if existing != ddb_item.ddb_format():
             logger.debug(f'Putting updated league new: {ddb_item.ddb_format()}, old: {existing}')
             leagues_table.put_item(Item=ddb_item.ddb_format())
+            updated_leagues += 1
         else:
             logger.debug(f'Skipping put for {ddb_item.leagueId}')
+
+    logger.info(f'Updated {updated_leagues} leagues.')
+
     return [league['League'] for league in res]
 
 
@@ -68,7 +73,7 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
     progress = Progress(transient=True)
     progress.start()
     overall = progress.add_task('Loading Tournaments', total=len(leagues))
-
+    updated_tourneys = 0
     for league in leagues:
         progress.advance(overall)
         res = leaguepedia.query(
@@ -89,6 +94,7 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
             if existing != ddb_tourney.ddb_format():
                 logger.debug(f'Putting new tournament {ddb_tourney}')
                 tournaments_table.put_item(Item=ddb_tourney.ddb_format())
+                updated_tourneys += 1
             else:
                 logger.debug(f'Skipping put for {ddb_tourney.tournamentId}')
             tourneys.append(tourney)
@@ -97,6 +103,7 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
         progress.update(local_league, visible=False)
     progress.stop_task(overall)
     progress.stop()
+    logger.info(f'Updated {updated_tourneys} Tourneys')
     return tourneys
 
 
@@ -128,10 +135,11 @@ def load_matches_thread(overview_page, progress: Progress, overall: TaskID):
     name = overview_page['Name']
     try:
         res = leaguepedia.query(
-            tables='MatchSchedule=MS,Tournaments=T,ScoreboardGames=SG',
-            join_on="MS.OverviewPage=T.OverviewPage,T.OverviewPage=SG.OverviewPage",
-            fields='MS.MatchId, MS.OverviewPage, T.Name, MS.Team1, MS.Team2, MS.Patch, MS.DateTime_UTC, MS.Winner, MS.BestOf, SG.VOD, MS.VodHighlights',
-            where=f"T.Name='{name}'",
+            tables='MatchSchedule=MS,Tournaments=T,MatchScheduleGame=MSG',
+            join_on="MS.OverviewPage=T.OverviewPage,MS.MatchId=MSG.MatchId",
+            fields='MS.MatchId,MS.OverviewPage,T.Name,MS.Team1,MS.Team2,'
+                   'MS.Patch,MS.DateTime_UTC,MS.Winner,MS.BestOf,MSG.VodGameStart,MS.VodHighlights',
+            where=f"T.Name='{name}' AND MSG.N_GameInMatch=1",
             order_by='MS.DateTime_UTC'
         )
     except Exception:
@@ -139,16 +147,20 @@ def load_matches_thread(overview_page, progress: Progress, overall: TaskID):
         return
 
     res = list(filter(filter_only_recent_matches, res))
+    logger.debug(f'Found results: {res}')
     local_matches = progress.add_task(f'Loading Matches for {overview_page["Name"]}', total=len(res))
+    updated_matches = 0
     for match in res:
         ddb_item = Match(match)
         existing = matches_table.get_item(Key=ddb_item.key()).get('Item', None)
         if existing != ddb_item.ddb_format():
-            logger.debug(f'Putting new match {ddb_item.ddb_format()}')
+            logger.debug(f'Putting new match {ddb_item.ddb_format()}, old match {existing}')
             matches_table.put_item(Item=ddb_item.ddb_format())
+            updated_matches += 1
         else:
             logger.debug(f'Skipping upload for {ddb_item.matchId}')
         progress.advance(local_matches)
+    logger.info(f'Updated {updated_matches} for {name}')
     progress.stop_task(local_matches)
     progress.update(local_matches, visible=False)
     progress.advance(overall)

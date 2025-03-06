@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from decimal import Decimal
 
 from util.datetime import transform_datetime_utc
 from util.team_info import get_team_code_from_name
@@ -12,7 +13,7 @@ class Match:
     redTeamId: str
     winner: str
     bestOf: int
-    startTime: str
+    startTime: Decimal
     patch: str
     vod: str
     highlight: str
@@ -26,7 +27,7 @@ class Match:
         self.bestOf = match['BestOf']
         self.startTime = transform_datetime_utc(match['DateTime UTC'])
         self.patch = match['Patch']
-        self.vod = match['VOD']
+        self.vod = match['VodGameStart']
         self.highlight = match['VodHighlights']
 
     def ddb_format(self):

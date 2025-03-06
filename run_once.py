@@ -1,15 +1,22 @@
+import logging
 from pprint import pprint
 
 from leaguepedia_parser.site.leaguepedia import LeaguepediaSite
+from rich.logging import RichHandler
+
+logging.basicConfig(
+    level="DEBUG", datefmt="[%X]", handlers=[RichHandler()]
+)
 
 if __name__ == '__main__':
     lp = LeaguepediaSite()
 
     res2 = lp.query(
-        tables='MatchSchedule=MS,Tournaments=T,ScoreboardGames=SG',
-        join_on="MS.OverviewPage=T.OverviewPage,T.OverviewPage=SG.OverviewPage",
-        fields='MS.MatchId, MS.OverviewPage, T.Name, MS.Team1, MS.Team2, MS.Patch, MS.DateTime_UTC, MS.Winner, MS.BestOf, SG.VOD, MS.VodHighlights',
-        where=f"T.Name='LCK 2023 Spring'",
+        tables='MatchSchedule=MS,Tournaments=T,MatchScheduleGame=MSG',
+        join_on="MS.OverviewPage=T.OverviewPage,MS.MatchId=MSG.MatchId",
+        fields='MS.MatchId,MS.OverviewPage,T.Name,MS.Team1,MS.Team2,'
+               'MS.Patch,MS.DateTime_UTC,MS.Winner,MS.BestOf,MSG.VodGameStart,MS.VodHighlights',
+        where="T.Name='LCK 2023 Spring' AND MSG.N_GameInMatch=1",
         order_by='MS.DateTime_UTC'
     )
 
