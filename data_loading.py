@@ -1,21 +1,23 @@
 import datetime
 import logging
 import warnings
-from concurrent.futures.thread import ThreadPoolExecutor
-from logging import Logger
+from time import sleep
+from typing import List
 
 import boto3
 from botocore.config import Config
-
-from leaguepedia_parser.site.leaguepedia import leaguepedia
+from mwclient import APIError
 from rich.logging import RichHandler
 from rich.progress import track, Progress, TaskID
 
+from leaguepedia.leaguepedia import LeaguepediaSite
 from models.league import League
 from models.match import Match
 from models.player import Player
 from models.team import Team
 from models.tournament import Tournament
+
+leaguepedia = LeaguepediaSite()
 
 warnings.filterwarnings(action="ignore", message=r"datetime.datetime.utcnow")
 
@@ -41,7 +43,7 @@ logger = logging.getLogger(__name__)
 LOAD_HISTORICAL = False
 
 # https://lol.fandom.com/wiki/Special:CargoTables/Leagues
-def load_leagues_and_return_leagues() -> [str]:
+def load_leagues_and_return_leagues() -> List[str]:
     logger.info('Loading Leagues')
     res = leaguepedia.query(
         tables='Leagues',
@@ -65,7 +67,7 @@ def load_leagues_and_return_leagues() -> [str]:
 
 
 # https://lol.fandom.com/wiki/Special:CargoTables/Tournaments
-def load_tourneys_and_return_overview_pages(leagues=None) -> []:
+def load_tourneys_and_return_overview_pages(leagues=None) -> List:
     if leagues is None:
         leagues = load_leagues_and_return_leagues()
     tourneys = []
@@ -76,12 +78,17 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> []:
     updated_tourneys = 0
     for league in leagues:
         progress.advance(overall)
-        res = leaguepedia.query(
-            tables='Tournaments=T,Leagues=L',
-            join_on="L.League=T.League",
-            fields='T.Name, T.OverviewPage, T.DateStart, T.IsQualifier, T.IsPlayoffs, T.IsOfficial, T.Year, L.League_Short, T.Date, L.League',
-            where=f"L.League='{league}'"
-        )
+        try:
+            res = leaguepedia.query(
+                tables='Tournaments=T,Leagues=L',
+                join_on="L.League=T.League",
+                fields='T.Name, T.OverviewPage, T.DateStart, T.IsQualifier, T.IsPlayoffs, T.IsOfficial, T.Year, L.League_Short, T.Date, L.League',
+                where=f"L.League='{league}'"
+            )
+            sleep(2)
+        except APIError as e:
+            logger.warning(f'Hit error querying {league}', exc_info=e)
+            continue
         res = filter(lambda x: x['Name'], res)
         res = filter(filter_only_recent_tourneys, res)
         res = map(remap_tournaments_manual, res)
@@ -142,8 +149,8 @@ def load_matches_thread(overview_page, progress: Progress, overall: TaskID):
             where=f"T.Name='{name}' AND MSG.N_GameInMatch=1",
             order_by='MS.DateTime_UTC'
         )
-    except Exception:
-        logger.debug(f'Hit Error for {name}')
+    except Exception as e:
+        logger.warning(f'Hit Error for {name}', exc_info=e)
         return
 
     res = list(filter(filter_only_recent_matches, res))
@@ -170,15 +177,13 @@ def load_matches(tourneys=None):
     if tourneys is None:
         tourneys = load_tourneys_and_return_overview_pages()
 
-    tp = ThreadPoolExecutor(max_workers=20)
-
     progress = Progress(transient=True)
     progress.start()
     overall = progress.add_task('Loading Matches', total=len(tourneys))
     for overview_page in tourneys:
-        tp.submit(load_matches_thread, overview_page, progress, overall)
+        load_matches_thread(overview_page, progress, overall)
+        sleep(2)
 
-    tp.shutdown(wait=True)
     progress.stop_task(overall)
     progress.stop()
 

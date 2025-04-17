@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-leaguepedia-parser = "2.0.2"
+mwrogue = "*"
 rich = "*"
 boto3 = "*"
 botocore = "*"
