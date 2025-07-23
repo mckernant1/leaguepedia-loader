@@ -6,7 +6,7 @@ from typing import List
 
 import boto3
 from botocore.config import Config
-from mwclient import APIError
+from mwclient import APIError, MaximumRetriesExceeded
 from rich.logging import RichHandler
 from rich.progress import track, Progress, TaskID
 
@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 # Remove the recency time filters.
 # This will load all history and will take a long time
 LOAD_HISTORICAL = False
+SLEEP = True
 
 # https://lol.fandom.com/wiki/Special:CargoTables/Leagues
 def load_leagues_and_return_leagues() -> List[str]:
@@ -85,8 +86,9 @@ def load_tourneys_and_return_overview_pages(leagues=None) -> List:
                 fields='T.Name, T.OverviewPage, T.DateStart, T.IsQualifier, T.IsPlayoffs, T.IsOfficial, T.Year, L.League_Short, T.Date, L.League',
                 where=f"L.League='{league}'"
             )
-            sleep(2)
-        except APIError as e:
+            if SLEEP:
+                sleep(2)
+        except (MaximumRetriesExceeded, APIError) as e:
             logger.warning(f'Hit error querying {league}', exc_info=e)
             continue
         res = filter(lambda x: x['Name'], res)
@@ -149,7 +151,7 @@ def load_matches_thread(overview_page, progress: Progress, overall: TaskID):
             where=f"T.Name='{name}' AND MSG.N_GameInMatch=1",
             order_by='MS.DateTime_UTC'
         )
-    except Exception as e:
+    except (MaximumRetriesExceeded, APIError) as e:
         logger.warning(f'Hit Error for {name}', exc_info=e)
         return
 
@@ -182,7 +184,8 @@ def load_matches(tourneys=None):
     overall = progress.add_task('Loading Matches', total=len(tourneys))
     for overview_page in tourneys:
         load_matches_thread(overview_page, progress, overall)
-        sleep(2)
+        if SLEEP:
+            sleep(2)
 
     progress.stop_task(overall)
     progress.stop()
