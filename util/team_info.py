@@ -7,7 +7,7 @@ team_code_dict = {}
 logger = Logger(__name__)
 
 
-def get_team_code_from_name(team_name):
+def get_team_code_from_name(team_name: str) -> str:
     if team_code_dict == {}:
         logger.debug('Loading Team Codes into Cache...')
         res = leaguepedia.query(

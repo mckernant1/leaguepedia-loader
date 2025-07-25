@@ -1,7 +1,7 @@
 import logging
 from pprint import pprint
 
-from leaguepedia_parser.site.leaguepedia import LeaguepediaSite
+from leaguepedia.leaguepedia import LeaguepediaSite
 from rich.logging import RichHandler
 
 logging.basicConfig(
