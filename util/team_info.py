@@ -1,6 +1,6 @@
 from logging import Logger
 
-from leaguepedia_parser.site.leaguepedia import leaguepedia
+from leaguepedia.leaguepedia import leaguepedia
 
 team_code_dict = {}
 
