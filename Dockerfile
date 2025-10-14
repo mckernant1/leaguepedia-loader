@@ -14,7 +14,7 @@ RUN mkdir /app
 COPY . /app
 WORKDIR /app
 RUN uv sync --frozen
-RUN uv run --frozen python -m PyInstaller src/load_everything.py -n leaguepedia-loader --onefile
+RUN uv run --frozen python -m PyInstaller src/load_everything.py -n leaguepedia-loader --onedir -y
 
 FROM 653528873951.dkr.ecr.us-west-2.amazonaws.com/docker-hub/library/python:3.13-slim-trixie AS runner
 
