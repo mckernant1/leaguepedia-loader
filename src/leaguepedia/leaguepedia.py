@@ -12,7 +12,9 @@ class LeaguepediaSite:
     Full documentation: https://lol.fandom.com/Help:API_Documentation
     """
 
-    def __init__(self, limit=500, delay_between: timedelta = timedelta(milliseconds=250)):
+    def __init__(
+        self, limit=500, delay_between: timedelta = timedelta(milliseconds=250)
+    ):
         self._site = None
         self.limit = limit
         self.delay_between = delay_between
@@ -30,10 +32,15 @@ class LeaguepediaSite:
         Used for ghost loading the class during package import.
         """
         # If not, we create the self.client object as our way to interact with the wiki
-        leaguepedia_username = os.environ['LEAGUEPEDIA_USERNAME']
-        leaguepedia_password = os.environ['LEAGUEPEDIA_PASSWORD']
+        leaguepedia_username = os.environ["LEAGUEPEDIA_USERNAME"]
+        leaguepedia_password = os.environ["LEAGUEPEDIA_PASSWORD"]
 
-        self._site = EsportsClient("lol", credentials=AuthCredentials(username=leaguepedia_username, password=leaguepedia_password))
+        self._site = EsportsClient(
+            "lol",
+            credentials=AuthCredentials(
+                username=leaguepedia_username, password=leaguepedia_password
+            ),
+        )
 
     def query(self, **kwargs) -> list:
         """Issues a cargo query to leaguepedia.
