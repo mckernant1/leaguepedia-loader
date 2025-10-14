@@ -29,7 +29,7 @@ def get_arg_parser() -> ArgumentParser:
     return parser
 
 
-if __name__ == '__main__':
+def main():
     cmd_parser = get_arg_parser()
     cmd = cmd_parser.parse_args()
 
@@ -38,4 +38,5 @@ if __name__ == '__main__':
     else:
         cmd.func()
 
-    print('Done!')
+if __name__ == '__main__':
+    main()
