@@ -40,16 +40,16 @@ wheels = [
 
 [[package]]
 name = "botocore"
-version = "1.40.51"
+version = "1.40.64"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jmespath" },
     { name = "python-dateutil" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ca/33/9e197d872adf1eadf8ecc259d0f451143326ff044d236b8971ff8bf980ee/botocore-1.40.51.tar.gz", hash = "sha256:a06de20408c3009e59e8f161a1146f1801d279d0923ab950349154900951bb20", size = 14421749, upload-time = "2025-10-13T19:20:32.491Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c1/15/109cb31c156a64bfaf4c809d2638fd95d8ba39b6deb7f1d0526c05257fd7/botocore-1.40.64.tar.gz", hash = "sha256:a13af4009f6912eafe32108f6fa584fb26e24375149836c2bcaaaaec9a7a9e58", size = 14409921, upload-time = "2025-10-31T19:33:12.291Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/f1/a6d9fdfec74c658cd8d639dc98de415fa42ce3c023602514c67f68e556d9/botocore-1.40.51-py3-none-any.whl", hash = "sha256:d5811a834bbdec6dac540565eab9f5ad954ed439b535686fbc3219e1cbfbfc49", size = 14090941, upload-time = "2025-10-13T19:20:28.165Z" },
+    { url = "https://files.pythonhosted.org/packages/8f/c5/70bec18aef3fe9af63847d8766f81864b20daacd1dc7bf0c1d1ad90c7e98/botocore-1.40.64-py3-none-any.whl", hash = "sha256:6902b3dadfba1fbacc9648171bef3942530d8f823ff2bdb0e585a332323f89fc", size = 14072939, upload-time = "2025-10-31T19:33:09.081Z" },
 ]
 
 [[package]]
