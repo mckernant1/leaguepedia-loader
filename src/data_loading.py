@@ -6,7 +6,7 @@ from typing import List
 
 import boto3
 from botocore.config import Config
-from mwclient import APIError, MaximumRetriesExceeded
+from mwclient.errors import MaximumRetriesExceeded, APIError
 from rich.logging import RichHandler
 from rich.progress import track, Progress, TaskID
 
